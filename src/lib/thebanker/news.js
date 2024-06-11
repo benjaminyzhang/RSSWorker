@@ -8,17 +8,22 @@ const getNewsItems = async (url) => {
     });
     let articles = [];
     let rewriter = new HTMLRewriter()
-        .on('article', {
+        .on('[data-cy="card-title-link"]', {
             element(element) {
-                const title = element.getAttribute('data-title');
-                const link = element.getAttribute('data-url');
-                const description = element.getAttribute('data-summary');
-                articles.push({ title, link, description });
+                const title = element.querySelector('h3').text;
+                const link = element.getAttribute('href'); // 假设链接是在同一个元素上的 href 属性
+                articles.push({ title, link });
+            }
+        })
+        .on('div.description', { // 假设描述在 class="description" 的 div 中
+            element(element) {
+                const description = element.text;
+                articles.push({ description });
             }
         })
         .transform(res);
     await rewriter.text();
-    return articles;
+    return articles.map(article => ({ ...article, description: article.description || '' }));
 };
 
 const generateRss = async (ctx) => {
